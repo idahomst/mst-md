@@ -5,17 +5,17 @@ A sleek, personal markdown editor for building your knowledge base. Runs on any 
 
 ## Features
 
-✅ **Authentication** - Secure login to protect your notes (single user so far)
-✅ **File Management** - Create, edit, delete files and folders
-✅ **Dual Panel Editor** - Live markdown preview as you type
-✅ **Mobile device friendly** - Detects small displays and switch the UI accordingly
-✅ **Syntax Highlighting** - Support for Python, Bash, YAML, JSON, JavaScript, PHP, SQL, and more
-✅ **Auto-save** - Automatically saves your work as you type
-✅ **Light/Dark Theme** - Toggle between themes for comfortable viewing
-✅ **Flexible Layout** - Switch between horizontal and vertical split views
-✅ **Search** - Full-text search across all your notes
-✅ **File Tree Navigation** - Browse your notes with a folder structure
-✅ **No Database** - All notes stored as `.md` files on the filesystem
+- [x] **Authentication** - Secure login to protect your notes (single user so far)
+- [x] **File Management** - Create, edit, delete files and folders
+- [x] **Dual Panel Editor** - Live markdown preview as you type
+- [x] **Mobile device friendly** - Detects small displays and switch the UI accordingly
+- [x] **Syntax Highlighting** - Support for Python, Bash, YAML, JSON, JavaScript, PHP, SQL, and more
+- [x] **Auto-save** - Automatically saves your work as you type
+- [x] **Light/Dark Theme** - Toggle between themes for comfortable viewing
+- [x] **Flexible Layout** - Switch between horizontal and vertical split views
+- [x] **Search** - Full-text search across all your notes
+- [x] **File Tree Navigation** - Browse your notes with a folder structure
+- [x] **No Database** - All notes stored as `.md` files on the filesystem
 
 ## Requirements
 
