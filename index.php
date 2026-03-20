@@ -89,7 +89,7 @@ if (empty($_SESSION['csrf_token'])) {
                     <i data-lucide="moon"></i>
                 </button>
                 <button id="layoutToggle" class="icon-btn desktop-only" title="Toggle layout">
-                    <i data-lucide="layout-split"></i>
+                    <i data-lucide="columns-2"></i>
                 </button>
                 <button id="newFileBtn" class="icon-btn" title="New file">
                     <i data-lucide="file-plus-2"></i>
@@ -164,7 +164,7 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@<?php echo MARKED_VERSION; ?>/lib/marked.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/languages/python.min.js"></script>

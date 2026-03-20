@@ -88,6 +88,13 @@ function toggleTheme() {
 // Layout management
 function applyLayout() {
     editorContainer.classList.toggle('vertical', state.layout === 'vertical');
+    
+    // Update layout toggle icon
+    if (layoutToggle) {
+        const iconName = state.layout === 'vertical' ? 'square-split-vertical' : 'columns-2';
+        layoutToggle.innerHTML = `<i data-lucide="${iconName}"></i>`;
+        refreshIcons();
+    }
 }
 
 function toggleLayout() {
