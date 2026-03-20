@@ -646,6 +646,10 @@ body {
     display: none;
 }
 
+.editor-container.vertical {
+    flex-direction: column;
+}
+
 .editor-container.vertical .divider {
     width: auto;
     height: 1px;
