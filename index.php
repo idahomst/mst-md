@@ -57,6 +57,9 @@ if (empty($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
     <title>Knowledge Base - Markdown Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/styles/github.min.css" id="highlight-light">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/styles/github-dark.min.css" id="highlight-dark" disabled>
@@ -66,17 +69,37 @@ if (empty($_SESSION['csrf_token'])) {
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <h1>📝 Knowledge Base</h1>
+                <div class="logo">
+                    <i data-lucide="book-marked"></i>
+                    <h1>Knowledge Base</h1>
+                </div>
             </div>
             <div class="header-right">
-                <input type="text" id="searchInput" placeholder="Search notes..." class="search-input">
-                <button id="previewToggle" class="icon-btn mobile-only" title="Edit mode">✏️</button>
-                <button id="desktopModeToggle" class="icon-btn desktop-only" title="Toggle edit mode">✏️</button>
-                <button id="themeToggle" class="icon-btn" title="Toggle theme">🌙</button>
-                <button id="layoutToggle" class="icon-btn desktop-only" title="Toggle layout">⬌</button>
-                <button id="newFileBtn" class="icon-btn" title="New file">📄+</button>
-                <button id="newFolderBtn" class="icon-btn" title="New folder">📁+</button>
-                <a href="?logout=1" class="icon-btn" title="Logout">🚪</a>
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search notes..." class="search-input">
+                </div>
+                <button id="previewToggle" class="icon-btn mobile-only" title="Edit mode">
+                    <i data-lucide="pen-line"></i>
+                </button>
+                <button id="desktopModeToggle" class="icon-btn desktop-only" title="Toggle edit mode">
+                    <i data-lucide="pen-line"></i>
+                </button>
+                <button id="themeToggle" class="icon-btn" title="Toggle theme">
+                    <i data-lucide="moon"></i>
+                </button>
+                <button id="layoutToggle" class="icon-btn desktop-only" title="Toggle layout">
+                    <i data-lucide="layout-split"></i>
+                </button>
+                <button id="newFileBtn" class="icon-btn" title="New file">
+                    <i data-lucide="file-plus-2"></i>
+                </button>
+                <button id="newFolderBtn" class="icon-btn" title="New folder">
+                    <i data-lucide="folder-plus"></i>
+                </button>
+                <a href="?logout=1" class="icon-btn" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </a>
             </div>
         </header>
 
@@ -86,6 +109,9 @@ if (empty($_SESSION['csrf_token'])) {
             <aside class="sidebar">
                 <div class="sidebar-header">
                     <h3>Files</h3>
+                    <div class="sidebar-actions">
+                        <!-- Actions could go here -->
+                    </div>
                 </div>
                 <div id="fileTree" class="file-tree"></div>
             </aside>
@@ -94,17 +120,23 @@ if (empty($_SESSION['csrf_token'])) {
             <div class="editor-container" id="editorContainer">
                 <div class="panel editor-panel">
                     <div class="panel-header">
-                        <span id="currentFileName">No file selected</span>
+                        <div class="panel-header-left">
+                            <i data-lucide="file-text"></i>
+                            <span id="currentFileName">No file selected</span>
+                        </div>
                         <span id="saveStatus" class="save-status"></span>
                     </div>
-                    <textarea id="editor"></textarea>
+                    <textarea id="editor" spellcheck="false" placeholder="Select a file to start editing..."></textarea>
                 </div>
 
                 <div class="divider" id="divider"></div>
 
                 <div class="panel preview-panel">
                     <div class="panel-header">
-                        <span>Preview</span>
+                        <div class="panel-header-left">
+                            <i data-lucide="eye"></i>
+                            <span>Preview</span>
+                        </div>
                     </div>
                     <div id="preview" class="markdown-preview"></div>
                 </div>
@@ -113,7 +145,9 @@ if (empty($_SESSION['csrf_token'])) {
     </div>
 
     <!-- Mobile sidebar toggle button -->
-    <button id="mobileSidebarToggle" class="mobile-sidebar-toggle" title="Toggle file tree">📁</button>
+    <button id="mobileSidebarToggle" class="mobile-sidebar-toggle" title="Toggle file tree">
+        <i data-lucide="menu"></i>
+    </button>
 
     <!-- Mobile backdrop -->
     <div id="mobileBackdrop" class="mobile-backdrop"></div>
@@ -130,6 +164,7 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </div>
 
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@<?php echo MARKED_VERSION; ?>/lib/marked.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/<?php echo HIGHLIGHT_JS_VERSION; ?>/languages/python.min.js"></script>

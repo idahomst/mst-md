@@ -8,7 +8,7 @@ const state = {
     isDirty: false,
     theme: localStorage.getItem('theme') || 'light',
     layout: localStorage.getItem('layout') || 'horizontal',
-    desktopMode: localStorage.getItem('desktopMode') || 'preview', // 'preview' or 'edit'
+    desktopMode: localStorage.getItem('desktopMode') || 'preview',
     expandedFolders: new Set(JSON.parse(localStorage.getItem('expandedFolders') || '[]'))
 };
 
@@ -35,20 +35,15 @@ const divider = document.getElementById('divider');
 const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
 const mobileBackdrop = document.getElementById('mobileBackdrop');
 const sidebar = document.querySelector('.sidebar');
-const previewPanel = document.querySelector('.preview-panel');
 
-// Configure marked with highlight.js
-marked.setOptions({
-    highlight: function(code, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-            try {
-                return hljs.highlight(code, { language: lang }).value;
-            } catch (err) {}
-        }
-        return hljs.highlightAuto(code).value;
-    },
+// Configure marked
+marked.use({
+    gfm: true,
     breaks: true,
-    gfm: true
+    highlight(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    }
 });
 
 // Initialize
@@ -60,16 +55,28 @@ function init() {
     applyDesktopMode();
     loadFileTree();
     setupEventListeners();
+    refreshIcons();
+}
+
+function refreshIcons() {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
 // Theme management
 function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.theme);
-    themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+    
+    // Update theme toggle icon
+    const iconName = state.theme === 'dark' ? 'sun' : 'moon';
+    themeToggle.innerHTML = `<i data-lucide="${iconName}"></i>`;
 
     // Toggle highlight.js themes
     document.getElementById('highlight-light').disabled = state.theme === 'dark';
     document.getElementById('highlight-dark').disabled = state.theme === 'light';
+    
+    refreshIcons();
 }
 
 function toggleTheme() {
@@ -80,11 +87,7 @@ function toggleTheme() {
 
 // Layout management
 function applyLayout() {
-    if (state.layout === 'vertical') {
-        editorContainer.classList.add('vertical');
-    } else {
-        editorContainer.classList.remove('vertical');
-    }
+    editorContainer.classList.toggle('vertical', state.layout === 'vertical');
 }
 
 function toggleLayout() {
@@ -95,11 +98,7 @@ function toggleLayout() {
 
 // Desktop mode management
 function applyDesktopMode() {
-    if (state.desktopMode === 'preview') {
-        editorContainer.classList.add('preview-only');
-    } else {
-        editorContainer.classList.remove('preview-only');
-    }
+    editorContainer.classList.toggle('preview-only', state.desktopMode === 'preview');
     updateDesktopModeButton();
 }
 
@@ -111,12 +110,14 @@ function toggleDesktopMode() {
 
 function updateDesktopModeButton() {
     if (desktopModeToggle) {
-        desktopModeToggle.textContent = state.desktopMode === 'preview' ? '✏️' : '👁️';
-        desktopModeToggle.title = state.desktopMode === 'preview' ? 'Edit mode' : 'Preview only mode';
+        const isPreview = state.desktopMode === 'preview';
+        desktopModeToggle.innerHTML = `<i data-lucide="${isPreview ? 'pen-line' : 'eye'}"></i>`;
+        desktopModeToggle.title = isPreview ? 'Edit mode' : 'Preview only';
+        refreshIcons();
     }
 }
 
-// Centralized API fetch function for POST requests
+// API wrapper
 async function apiFetch(url, options = {}) {
     options.method = 'POST';
     options.headers = {
@@ -128,68 +129,62 @@ async function apiFetch(url, options = {}) {
     try {
         const response = await fetch(url, options);
         const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || `HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(data.error || 'API Error');
         return data;
     } catch (error) {
-        console.error('API Fetch Error:', error);
-        alert(`An error occurred: ${error.message}`);
+        console.error('API Error:', error);
+        alert(error.message);
         throw error;
     }
 }
 
-// File tree management
+// File Tree
 async function loadFileTree() {
     try {
         const response = await fetch('api.php?action=getTree');
         const data = await response.json();
-
         if (data.success) {
             state.fileTree = data.tree;
             renderFileTree();
         }
     } catch (error) {
-        console.error('Error loading file tree:', error);
-        alert('Error loading file tree');
+        console.error('Tree Error:', error);
     }
 }
 
 function renderFileTree() {
     fileTree.innerHTML = '';
     renderTreeItems(state.fileTree, fileTree);
+    refreshIcons();
 }
 
 function renderTreeItems(items, container, level = 0) {
     items.forEach(item => {
         const itemEl = document.createElement('div');
-        itemEl.className = 'tree-item-wrapper';
+        itemEl.className = 'tree-item-container';
 
         const itemContent = document.createElement('div');
         itemContent.className = 'tree-item';
-        itemContent.style.paddingLeft = (level * 8 + 12) + 'px';
+        if (state.currentFile === item.path) itemContent.classList.add('active');
+        itemContent.style.paddingLeft = (level * 16 + 12) + 'px';
 
+        // Toggle / Icon
         if (item.type === 'folder') {
             const toggle = document.createElement('span');
             toggle.className = 'tree-toggle';
-            toggle.textContent = '▶';
+            if (state.expandedFolders.has(item.path)) toggle.classList.add('expanded');
+            toggle.innerHTML = '<i data-lucide="chevron-right"></i>';
             itemContent.appendChild(toggle);
 
             const icon = document.createElement('span');
             icon.className = 'tree-item-icon';
-            icon.textContent = '📁';
+            icon.innerHTML = '<i data-lucide="folder"></i>';
             itemContent.appendChild(icon);
         } else {
-            const spacer = document.createElement('span');
-            spacer.style.width = '10px';
-            spacer.style.display = 'inline-block';
-            itemContent.appendChild(spacer);
-
             const icon = document.createElement('span');
             icon.className = 'tree-item-icon';
-            icon.textContent = '📄';
+            icon.style.marginLeft = '20px'; // Align with folders
+            icon.innerHTML = '<i data-lucide="file-text"></i>';
             itemContent.appendChild(icon);
         }
 
@@ -198,78 +193,50 @@ function renderTreeItems(items, container, level = 0) {
         name.textContent = item.name;
         itemContent.appendChild(name);
 
+        // Actions
         const actions = document.createElement('span');
         actions.className = 'tree-item-actions';
 
-        // Add file button for folders
         if (item.type === 'folder') {
             const addFileBtn = document.createElement('button');
             addFileBtn.className = 'tree-action-btn';
-            addFileBtn.textContent = '📄';
-            addFileBtn.title = 'New file in this folder';
-            addFileBtn.onclick = (e) => {
-                e.stopPropagation();
-                createNewFileInFolder(item.path);
-            };
+            addFileBtn.innerHTML = '<i data-lucide="file-plus"></i>';
+            addFileBtn.onclick = (e) => { e.stopPropagation(); createNewFileInFolder(item.path); };
             actions.appendChild(addFileBtn);
         }
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'tree-action-btn';
-        deleteBtn.textContent = '🗑️';
-        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm(`Delete ${item.name}?`)) {
-                deleteItem(item.path);
-            }
+            if (confirm(`Delete ${item.name}?`)) deleteItem(item.path);
         };
         actions.appendChild(deleteBtn);
-
         itemContent.appendChild(actions);
 
+        // Click Handler
         if (item.type === 'file') {
-            itemContent.onclick = () => {
-                loadFile(item.path);
-                // Close mobile sidebar when file is selected
-                closeMobileSidebar();
-            };
-            if (state.currentFile === item.path) {
-                itemContent.classList.add('active');
-            }
+            itemContent.onclick = () => { loadFile(item.path); closeMobileSidebar(); };
         } else {
             const childrenContainer = document.createElement('div');
             childrenContainer.className = 'tree-children';
-
-            // Check if folder should be expanded
             const isExpanded = state.expandedFolders.has(item.path);
             childrenContainer.style.display = isExpanded ? 'block' : 'none';
 
             itemContent.onclick = () => {
-                const toggle = itemContent.querySelector('.tree-toggle');
-                if (childrenContainer.style.display === 'none') {
-                    childrenContainer.style.display = 'block';
-                    toggle.classList.add('expanded');
-                    state.expandedFolders.add(item.path);
-                } else {
-                    childrenContainer.style.display = 'none';
-                    toggle.classList.remove('expanded');
-                    state.expandedFolders.delete(item.path);
-                }
-                // Save expanded state
+                const isNowExpanded = childrenContainer.style.display === 'none';
+                childrenContainer.style.display = isNowExpanded ? 'block' : 'none';
+                itemContent.querySelector('.tree-toggle').classList.toggle('expanded', isNowExpanded);
+                
+                if (isNowExpanded) state.expandedFolders.add(item.path);
+                else state.expandedFolders.delete(item.path);
+                
                 localStorage.setItem('expandedFolders', JSON.stringify([...state.expandedFolders]));
+                refreshIcons();
             };
 
-            // Set initial toggle state
-            const toggle = itemContent.querySelector('.tree-toggle');
-            if (isExpanded) {
-                toggle.classList.add('expanded');
-            }
-
-            if (item.children && item.children.length > 0) {
-                renderTreeItems(item.children, childrenContainer, level + 1);
-            }
-
+            if (item.children) renderTreeItems(item.children, childrenContainer, level + 1);
             itemEl.appendChild(itemContent);
             itemEl.appendChild(childrenContainer);
             container.appendChild(itemEl);
@@ -281,180 +248,104 @@ function renderTreeItems(items, container, level = 0) {
     });
 }
 
-// File operations
+// File Ops
 async function loadFile(path) {
-    if (state.isDirty && !confirm('You have unsaved changes. Load new file?')) {
-        return;
-    }
+    if (state.isDirty && !confirm('Discard unsaved changes?')) return;
 
     try {
         const response = await fetch(`api.php?action=getFile&path=${encodeURIComponent(path)}`);
         const data = await response.json();
-
         if (data.success) {
             state.currentFile = path;
             state.currentContent = data.content;
             state.isDirty = false;
-
             editor.value = data.content;
             currentFileName.textContent = data.name;
             updatePreview();
-            renderFileTree(); // Re-render to update active state
+            renderFileTree();
             saveStatus.textContent = '';
         }
-    } catch (error) {
-        console.error('Error loading file:', error);
-        alert('Error loading file');
-    }
+    } catch (error) { console.error(error); }
 }
 
 async function saveFile() {
     if (!state.currentFile) return;
-
     try {
-        saveStatus.textContent = '💾 Saving...';
+        saveStatus.textContent = 'Saving...';
         saveStatus.className = 'save-status saving';
-
         const data = await apiFetch('api.php?action=saveFile', {
-            body: JSON.stringify({
-                path: state.currentFile,
-                content: editor.value
-            })
+            body: JSON.stringify({ path: state.currentFile, content: editor.value })
         });
-
         if (data.success) {
             state.currentContent = editor.value;
             state.isDirty = false;
-            saveStatus.textContent = '✓ Saved';
+            saveStatus.textContent = 'Saved';
             saveStatus.className = 'save-status saved';
-
-            setTimeout(() => {
-                saveStatus.textContent = '';
-            }, 2000);
+            setTimeout(() => { if (!state.isDirty) saveStatus.textContent = ''; }, 2000);
         }
     } catch (error) {
-        saveStatus.textContent = '✗ Error';
+        saveStatus.textContent = 'Error';
         saveStatus.className = 'save-status';
     }
 }
 
 async function deleteItem(path) {
-    try {
-        const data = await apiFetch('api.php?action=delete', {
-            body: JSON.stringify({ path })
-        });
-
-        if (data.success) {
-            if (state.currentFile === path || state.currentFile?.startsWith(path + '/')) {
-                state.currentFile = null;
-                state.currentContent = '';
-                editor.value = '';
-                currentFileName.textContent = 'No file selected';
-                preview.innerHTML = '';
-            }
-            loadFileTree();
+    const data = await apiFetch('api.php?action=delete', { body: JSON.stringify({ path }) });
+    if (data.success) {
+        if (state.currentFile === path || state.currentFile?.startsWith(path + '/')) {
+            state.currentFile = null;
+            state.currentContent = '';
+            editor.value = '';
+            currentFileName.textContent = 'No file selected';
+            preview.innerHTML = '';
         }
-    } catch (error) {
-        // Error is handled by apiFetch
+        loadFileTree();
     }
 }
 
-// Modal operations
+// Modals
 function showModal(title, onConfirm) {
     modalTitle.textContent = title;
     modalInput.value = '';
     modal.classList.add('active');
     modalInput.focus();
-
-    const confirmHandler = () => {
-        const value = modalInput.value.trim();
-        if (value) {
-            onConfirm(value);
-            hideModal();
-        }
-    };
-
-    modalConfirm.onclick = confirmHandler;
-    modalInput.onkeypress = (e) => {
-        if (e.key === 'Enter') confirmHandler();
+    modalConfirm.onclick = () => {
+        const val = modalInput.value.trim();
+        if (val) { onConfirm(val); hideModal(); }
     };
 }
-
-function hideModal() {
-    modal.classList.remove('active');
-    modalInput.value = '';
-}
+function hideModal() { modal.classList.remove('active'); }
 
 async function createNewFile() {
-    showModal('Create New File', async (name) => {
-        try {
-            const data = await apiFetch('api.php?action=createFile', {
-                body: JSON.stringify({ name, path: '' })
-            });
-
-            if (data.success) {
-                await loadFileTree();
-                loadFile(data.path);
-            }
-        } catch (error) {
-            // Error is handled by apiFetch
-        }
+    showModal('New File', async (name) => {
+        const data = await apiFetch('api.php?action=createFile', { body: JSON.stringify({ name, path: '' }) });
+        if (data.success) { await loadFileTree(); loadFile(data.path); }
     });
 }
 
 async function createNewFileInFolder(folderPath) {
-    showModal('Create New File in ' + folderPath, async (name) => {
-        try {
-            const data = await apiFetch('api.php?action=createFile', {
-                body: JSON.stringify({ name, path: folderPath })
-            });
-
-            if (data.success) {
-                await loadFileTree();
-                loadFile(data.path);
-            }
-        } catch (error) {
-            // Error is handled by apiFetch
-        }
+    showModal(`New File in ${folderPath}`, async (name) => {
+        const data = await apiFetch('api.php?action=createFile', { body: JSON.stringify({ name, path: folderPath }) });
+        if (data.success) { await loadFileTree(); loadFile(data.path); }
     });
 }
 
 async function createNewFolder() {
-    showModal('Create New Folder', async (name) => {
-        try {
-            const data = await apiFetch('api.php?action=createFolder', {
-                body: JSON.stringify({ name, path: '' })
-            });
-
-            if (data.success) {
-                loadFileTree();
-            }
-        } catch (error) {
-            // Error is handled by apiFetch
-        }
+    showModal('New Folder', async (name) => {
+        const data = await apiFetch('api.php?action=createFolder', { body: JSON.stringify({ name, path: '' }) });
+        if (data.success) loadFileTree();
     });
 }
 
-// Search functionality
+// Search
 let searchTimeout;
 let searchResultsEl;
 
 async function performSearch(query) {
-    if (query.length < 2) {
-        hideSearchResults();
-        return;
-    }
-
-    try {
-        const response = await fetch(`api.php?action=search&query=${encodeURIComponent(query)}`);
-        const data = await response.json();
-
-        if (data.success) {
-            showSearchResults(data.results);
-        }
-    } catch (error) {
-        console.error('Error searching:', error);
-    }
+    if (query.length < 2) { hideSearchResults(); return; }
+    const response = await fetch(`api.php?action=search&query=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    if (data.success) showSearchResults(data.results);
 }
 
 function showSearchResults(results) {
@@ -463,217 +354,126 @@ function showSearchResults(results) {
         searchResultsEl.className = 'search-results';
         document.body.appendChild(searchResultsEl);
     }
-
     if (results.length === 0) {
-        searchResultsEl.innerHTML = '<div style="padding: 12px; color: var(--text-secondary);">No results found</div>';
+        searchResultsEl.innerHTML = '<div style="padding: 16px; color: var(--text-secondary);">No results found</div>';
     } else {
         searchResultsEl.innerHTML = results.map(result => `
-            <div class="search-result-item" onclick="loadFile('${result.path}')">
+            <div class="search-result-item" onclick="loadFile('${result.path}'); hideSearchResults();">
                 <div class="search-result-name">${result.name}</div>
-                <div class="search-result-path">${result.path}</div>
+                <div class="search-result-path"><i data-lucide="folder" style="width:12px;height:12px"></i> ${result.path}</div>
                 ${result.matches.map(match => `
                     <div class="search-result-match">Line ${match.line}: ${escapeHtml(match.text)}</div>
                 `).join('')}
             </div>
         `).join('');
     }
-
     positionSearchResults();
     searchResultsEl.classList.add('active');
+    refreshIcons();
 }
 
 function positionSearchResults() {
     if (!searchResultsEl) return;
-
-    const searchInputRect = searchInput.getBoundingClientRect();
-    searchResultsEl.style.top = searchInputRect.bottom + 5 + 'px';
-    searchResultsEl.style.left = searchInputRect.left + 'px';
-    searchResultsEl.style.width = searchInputRect.width + 'px';
+    const rect = searchInput.getBoundingClientRect();
+    searchResultsEl.style.top = (rect.bottom + 8) + 'px';
+    searchResultsEl.style.left = rect.left + 'px';
+    searchResultsEl.style.width = rect.width + 'px';
 }
 
+function hideSearchResults() { searchResultsEl?.classList.remove('active'); }
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-function hideSearchResults() {
-    if (searchResultsEl) {
-        searchResultsEl.classList.remove('active');
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Preview update
+// Preview
 function updatePreview() {
-    const markdown = editor.value;
-    preview.innerHTML = marked.parse(markdown);
-
-    // Re-apply syntax highlighting
-    preview.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-    });
+    let html = marked.parse(editor.value);
+    
+    // Simple XSS protection - strip script tags
+    html = html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gim, "");
+    
+    preview.innerHTML = html;
+    preview.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
 }
 
-// Auto-save functionality
+// Auto-save
 let autoSaveTimeout;
 function scheduleAutoSave() {
     clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-        if (state.isDirty && state.currentFile) {
-            saveFile();
-        }
-    }, 2000); // Auto-save after 2 seconds of inactivity
+    autoSaveTimeout = setTimeout(() => { if (state.isDirty && state.currentFile) saveFile(); }, 2000);
 }
 
-// Mobile sidebar management
-function toggleMobileSidebar() {
-    sidebar.classList.toggle('mobile-open');
-    mobileBackdrop.classList.toggle('active');
-}
+// Mobile
+function toggleMobileSidebar() { sidebar.classList.toggle('mobile-open'); mobileBackdrop.classList.toggle('active'); }
+function closeMobileSidebar() { sidebar.classList.remove('mobile-open'); mobileBackdrop.classList.remove('active'); }
 
-function closeMobileSidebar() {
-    sidebar.classList.remove('mobile-open');
-    mobileBackdrop.classList.remove('active');
-}
-
-// Mobile preview toggle
 function toggleMobilePreview() {
     editorContainer.classList.toggle('mobile-edit-mode');
-    const isEditMode = editorContainer.classList.contains('mobile-edit-mode');
-    previewToggle.textContent = isEditMode ? '👁️' : '✏️';
-    previewToggle.title = isEditMode ? 'Preview only' : 'Edit mode';
+    const isEdit = editorContainer.classList.contains('mobile-edit-mode');
+    previewToggle.innerHTML = `<i data-lucide="${isEdit ? 'eye' : 'pen-line'}"></i>`;
+    refreshIcons();
 }
 
-// Event listeners
+// Events
 function setupEventListeners() {
-    // Editor input
     editor.addEventListener('input', () => {
-        if (state.currentFile && editor.value !== state.currentContent) {
-            state.isDirty = true;
-        }
+        state.isDirty = editor.value !== state.currentContent;
         updatePreview();
         scheduleAutoSave();
     });
 
-    // Manual save with Ctrl+S
     editor.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            saveFile();
-        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
     });
 
-    // Theme toggle
     themeToggle.addEventListener('click', toggleTheme);
-
-    // Layout toggle
     layoutToggle.addEventListener('click', toggleLayout);
-
-    // Desktop mode toggle
-    if (desktopModeToggle) {
-        desktopModeToggle.addEventListener('click', toggleDesktopMode);
-    }
-
-    // Preview toggle (mobile)
+    desktopModeToggle?.addEventListener('click', toggleDesktopMode);
     previewToggle.addEventListener('click', toggleMobilePreview);
-
-    // Mobile sidebar toggle
     mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
     mobileBackdrop.addEventListener('click', closeMobileSidebar);
-
-    // New file/folder buttons
     newFileBtn.addEventListener('click', createNewFile);
     newFolderBtn.addEventListener('click', createNewFolder);
-
-    // Modal
     modalCancel.addEventListener('click', hideModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) hideModal();
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
 
-    // Search
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
-        const query = e.target.value.trim();
-
-        if (query.length === 0) {
-            hideSearchResults();
-            return;
-        }
-
-        searchTimeout = setTimeout(() => {
-            performSearch(query);
-        }, 300);
+        const q = e.target.value.trim();
+        if (!q) return hideSearchResults();
+        searchTimeout = setTimeout(() => performSearch(q), 300);
     });
 
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            hideSearchResults();
-            searchInput.blur();
-        }
-    });
-
-    // Don't hide search results on blur - let user click on them
     document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) &&
-            (!searchResultsEl || !searchResultsEl.contains(e.target))) {
-            hideSearchResults();
-        }
+        if (!searchInput.contains(e.target) && !searchResultsEl?.contains(e.target)) hideSearchResults();
     });
 
-    // Divider for resizing
-    setupDividerResize();
-
-    // Recalculate search position on resize
     window.addEventListener('resize', positionSearchResults);
-
-    // Warn before leaving with unsaved changes
-    window.addEventListener('beforeunload', (e) => {
-        if (state.isDirty) {
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
+    window.addEventListener('beforeunload', (e) => { if (state.isDirty) { e.preventDefault(); e.returnValue = ''; } });
+    
+    setupDividerResize();
 }
 
-// Divider resize functionality
 function setupDividerResize() {
     let isResizing = false;
-    let startPos = 0;
-    let startSize = 0;
-
     divider.addEventListener('mousedown', (e) => {
         isResizing = true;
-        startPos = state.layout === 'horizontal' ? e.clientX : e.clientY;
-
-        const editorPanel = document.querySelector('.editor-panel');
-        const rect = editorPanel.getBoundingClientRect();
-        startSize = state.layout === 'horizontal' ? rect.width : rect.height;
-
         document.body.style.cursor = state.layout === 'horizontal' ? 'col-resize' : 'row-resize';
         e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
-
         const editorPanel = document.querySelector('.editor-panel');
-        const currentPos = state.layout === 'horizontal' ? e.clientX : e.clientY;
-        const diff = currentPos - startPos;
-        const newSize = startSize + diff;
-
         if (state.layout === 'horizontal') {
-            editorPanel.style.flex = `0 0 ${newSize}px`;
+            const newWidth = e.clientX - editorPanel.getBoundingClientRect().left;
+            editorPanel.style.flex = `0 0 ${newWidth}px`;
         } else {
-            editorPanel.style.flex = `0 0 ${newSize}px`;
+            const newHeight = e.clientY - editorPanel.getBoundingClientRect().top;
+            editorPanel.style.flex = `0 0 ${newHeight}px`;
         }
     });
 
     document.addEventListener('mouseup', () => {
-        if (isResizing) {
-            isResizing = false;
-            document.body.style.cursor = '';
-        }
+        isResizing = false;
+        document.body.style.cursor = '';
     });
 }

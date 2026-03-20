@@ -4,7 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Knowledge Base</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #fbfcfd;
+            --bg-secondary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border-color: #e5e7eb;
+            --radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --border-color: #334155;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,72 +37,92 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            transition: background 0.3s;
         }
 
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        .login-card {
+            background: var(--bg-primary);
+            padding: 48px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            border: 1px solid var(--border-color);
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            color: var(--accent-color);
+            margin-bottom: 16px;
+            display: inline-block;
         }
 
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 28px;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            color: #555;
+            color: var(--text-secondary);
+            font-size: 14px;
             font-weight: 500;
         }
 
-        input[type="text"],
-        input[type="password"] {
+        input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.2s;
         }
 
-        input[type="text"]:focus,
-        input[type="password"]:focus {
+        input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent-color);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--accent-color);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            margin-top: 8px;
         }
 
         button:hover {
-            transform: translateY(-2px);
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         button:active {
@@ -85,18 +130,32 @@
         }
 
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
             text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
         }
     </style>
 </head>
-<body>
-    <div class="login-container">
-        <h1>📝 Knowledge Base</h1>
+<body data-theme-auto>
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="m8 6 4 4-4 4"></path></svg>
+            </div>
+            <h1>Knowledge Base</h1>
+        </div>
 
         <?php if (isset($error)): ?>
             <div class="error"><?php echo htmlspecialchars($error); ?></div>
@@ -105,16 +164,33 @@
         <form method="POST" action="">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required autofocus>
+                <input type="text" id="username" name="username" required autofocus autocomplete="username">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
             </div>
 
-            <button type="submit">Login</button>
+            <button type="submit">Sign In</button>
         </form>
+
+        <div class="footer">
+            Personal Note Editor &bull; Markdown Powered
+        </div>
     </div>
+
+    <script>
+        // Simple theme detection for login page
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+        
+        // Respect localStorage if set
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+        }
+    </script>
 </body>
 </html>
