@@ -1,16 +1,23 @@
 <?php
-// Configuration
-define('USERNAME', 'admin'); // Change this
+// mst·md configuration — copy to config.php (which is git-ignored) and edit.
 
-// To generate a new password hash:
-//     php -r "echo password_hash('your-new-password', PASSWORD_DEFAULT);"
+// Sign-in name
+define('USERNAME', 'admin');
 
-define('PASSWORD', '$2y$10$tAMJzy8GMHsIN/EOcRyEseBr5jjUn3anw.3pGEhkf.CDUoA20biEC'); // Change this password hash
+// Password hash. Generate one with:
+//     php -r "echo password_hash('your-password', PASSWORD_DEFAULT), PHP_EOL;"
+define('PASSWORD', '$2y$12$replace.this.with.your.own.hash.................');
 
-// Or uncomment next line if you wish to see your password in clear text:
-//define('PASSWORD', password_hash('changeme', PASSWORD_DEFAULT)); // Change this password
+// --- Optional -----------------------------------------------------------
+// Where notes are stored. Best outside the web root, e.g. '/srv/mst-md/notes'.
+// define('NOTES_DIR', __DIR__ . '/notes');
 
-// Library versions
-define('MARKED_VERSION', '16.3.0');
-define('HIGHLIGHT_JS_VERSION', '11.11.1');
-?>
+// Where runtime data (login throttling) is stored.
+// define('DATA_DIR', __DIR__ . '/data');
+
+// Sign out after this many seconds without activity (default: 7 days).
+// define('SESSION_IDLE_SECONDS', 604800);
+
+// Failed sign-ins allowed per IP within the window (default: 5 per 15 min).
+// define('LOGIN_MAX_ATTEMPTS', 5);
+// define('LOGIN_WINDOW_SECONDS', 900);

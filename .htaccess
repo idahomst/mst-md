@@ -1,0 +1,14 @@
+# mst·md — Apache settings
+Options -Indexes
+DirectoryIndex index.php
+
+# Never serve configuration, docs or dotfiles
+<FilesMatch "^(config(\.example)?\.php|README\.md|LICENSE|\..*)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

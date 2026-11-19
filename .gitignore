@@ -1,0 +1,11 @@
+# Local configuration — contains your password hash, never commit it
+config.php
+
+# Runtime data
+data/*
+!data/.htaccess
+
+# Your notes (keep the example + access rule only)
+notes/*
+!notes/.htaccess
+!notes/example.md
