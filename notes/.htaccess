@@ -1,0 +1,2 @@
+# Not web-accessible (Apache 2.4). For nginx see README → Deployment.
+Require all denied
