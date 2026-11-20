@@ -3,6 +3,16 @@
 A small, private Markdown notebook for your own server. Notes are plain `.md`
 files in a folder — no database, no build step, no third-party requests.
 
+## Screenshots
+
+| Light | Dark |
+|---|---|
+| ![Light theme](screenshots/mst-md-light.png) | ![Dark theme](screenshots/mst-md-dark.png) |
+
+| Mobile light | Mobile dark |
+|---|---|
+| ![Mobile, light theme](screenshots/mst-md-mobile-light.png) | ![Mobile, dark theme](screenshots/mst-md-mobile-dark.png) |
+
 ## Features
 
 - **Write** in a focused Markdown editor with live preview — *Edit*, *Split*
